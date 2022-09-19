@@ -280,8 +280,8 @@ def do_it(args):
           set="train",
     )
 
-    def create_dataloader(train_batch_size=1):
-        return torch.utils.data.DataLoader(train_dataset, batch_size=train_batch_size, shuffle=True)
+    def create_dataloader(train_batch_size, num_workers):
+        return torch.utils.data.DataLoader(train_dataset, batch_size=train_batch_size, num_workers=num_workers, shuffle=True)
 
     noise_scheduler = DDPMScheduler(
         beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", num_train_timesteps=1000, tensor_format="pt"
@@ -292,6 +292,7 @@ def do_it(args):
         "scale_lr": True,
         "max_train_steps": 3000,
         "train_batch_size": 1,
+        "num_workers": 32,
         "gradient_accumulation_steps": 4,
         "seed": 21812358,
         "output_dir": "sd-concept-output"
@@ -304,13 +305,14 @@ def do_it(args):
         gradient_accumulation_steps = hyperparameters["gradient_accumulation_steps"]
         learning_rate = hyperparameters["learning_rate"]
         max_train_steps = hyperparameters["max_train_steps"]
+        num_workers = hyperparameters["num_workers"]
         output_dir = hyperparameters["output_dir"]
 
         accelerator = Accelerator(
             gradient_accumulation_steps=gradient_accumulation_steps,
         )
 
-        train_dataloader = create_dataloader(train_batch_size)
+        train_dataloader = create_dataloader(train_batch_size, num_workers)
 
         if hyperparameters["scale_lr"]:
             learning_rate = (
